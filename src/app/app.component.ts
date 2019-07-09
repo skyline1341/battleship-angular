@@ -122,8 +122,8 @@ export class AppComponent {
   private generateShipShapeL(ship: Ship): Ship {
     // выберем стартовую точку
     ship.coords = [];
-    const startX = this.random(this.maxGrid);
-    const startY = this.random(this.maxGrid);
+    const startX = this.random(this.maxGrid - 1);
+    const startY = this.random(this.maxGrid - 1);
     const horizontal = !!this.random(1);
     const atStart = this.random(1);
     const ckw = this.random(1);
@@ -206,8 +206,8 @@ export class AppComponent {
   private generateShipShapeI(ship: Ship): Ship {
     // выберем стартовую точку
     ship.coords = [];
-    const startX = this.random(this.maxGrid);
-    const startY = this.random(this.maxGrid);
+    const startX = this.random(this.maxGrid - 1);
+    const startY = this.random(this.maxGrid - 1);
     const horizontal = !!this.random(1);
 
     if (horizontal) {
@@ -238,8 +238,8 @@ export class AppComponent {
   private generateShipShapeDot(ship: Ship): Ship {
     ship.coords = [];
     ship.coords.push({
-      x: this.random(this.maxGrid),
-      y: this.random(this.maxGrid),
+      x: this.random(this.maxGrid - 1),
+      y: this.random(this.maxGrid - 1),
     } as Coord);
 
     // ЗАЦИКЛИВАЕМСЯ ТУТ - RangeError: Maximum call stack size exceeded
