@@ -1,0 +1,18 @@
+$gridWidth: 400px;
+.grid {
+  width: $gridWidth;
+  height: $gridWidth;
+  &__td {
+    width: $gridWidth / 10;
+    height: $gridWidth / 10;
+    background-color: #c1e0ff;
+  }
+  &__tr {
+    width: $gridWidth;
+    height: $gridWidth / 10;
+    display: flex;
+  }
+  .ship {
+    background: darkgrey;
+  }
+}
