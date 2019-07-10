@@ -1,8 +1,8 @@
-import {ChangeDetectorRef, Component, HostListener} from '@angular/core';
+import {Component, HostListener} from '@angular/core';
 
 export interface GridItem {
   shipId: number | null;
-  status: boolean; // поражена ли клетка
+  damaged: boolean; // поражена ли клетка
 }
 
 export interface Coord {
@@ -16,6 +16,7 @@ export interface Ship {
   type: string;
   dots: number;
   alive: true;
+  dotsLeft: number;
 }
 
 export enum ShipTypes {
@@ -43,6 +44,7 @@ export class AppComponent {
       coords: [],
       type: ShipTypes.L_SHAPED,
       dots: 4,
+      dotsLeft: 4,
       alive: true,
     },
     {
@@ -50,6 +52,7 @@ export class AppComponent {
       coords: [],
       type: ShipTypes.I_SHAPED,
       dots: 4,
+      dotsLeft: 4,
       alive: true,
     },
     {
@@ -57,6 +60,7 @@ export class AppComponent {
       coords: [],
       type: ShipTypes.DOT_SHAPED,
       dots: 1,
+      dotsLeft: 1,
       alive: true,
     },
     {
@@ -64,6 +68,7 @@ export class AppComponent {
       coords: [],
       type: ShipTypes.DOT_SHAPED,
       dots: 1,
+      dotsLeft: 1,
       alive: true,
     },
   ];
@@ -74,20 +79,17 @@ export class AppComponent {
       if (!this.gameIsOver) {
         this.shootRandom();
         this.gameIsOver = this.checkIfGameIsOver();
+      } else {
+        setTimeout(() => {
+          window.location.reload();
+        }, 5000);
       }
     }
   }
 
-  constructor(
-    private cdr: ChangeDetectorRef,
-  ) {
-    this.init();
-  }
-
-  private init(): void {
+  constructor() {
     this.matrix = this.createEmptyMatrix();
     this.generateShips(this.ships);
-    console.log(this.ships);
   }
 
   private shootRandom(): void {
@@ -96,24 +98,38 @@ export class AppComponent {
     do {
       x = this.random(this.maxGrid - 1);
       y = this.random(this.maxGrid - 1);
-    } while (this.matrix[x][y].status);
-    this.matrix[x][y].status = true;
+    } while (this.matrix[x][y].damaged);
+    this.matrix[x][y].damaged = true;
+    for (const ship of this.ships) {
+      const shipIsDamaged = this.checkIfShipDamaged(ship, x, y);
+      if (shipIsDamaged) {
+        const shipDots = document.querySelectorAll(`.ship${ship.id}`);
+        // добавим класс поражения корабля для мигания
+        // @ts-ignore
+        for (const shipDot of shipDots) {
+          shipDot.classList.add('damaged');
+        }
+        if (ship.dotsLeft - 1 > 0) {
+          ship.dotsLeft--;
+          // @ts-ignore
+          for (const shipDot of shipDots) {
+            setTimeout(() => {
+              shipDot.classList.remove('damaged');
+            }, 300);
+          }
+        }
+      }
+    }
   }
 
-  // private checkShipsKilled(): void {
-  //   const shootedDots: Coord[] = [];
-  //   for (let i = 0; i < this.maxGrid; i++) {
-  //     for (let j = 0; j < this.maxGrid; j++) {
-  //       if (this.matrix[i][j].status) {
-  //         shootedDots.push({
-  //           x: i,
-  //           y: j,
-  //         } as Coord);
-  //       }
-  //     }
-  //   }
-  //   console.log(shootedDots);
-  // }
+  private checkIfShipDamaged(ship: Ship, x: number, y: number): boolean {
+    for (const coord of ship.coords) {
+      if (coord.x === x && coord.y === y) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   private checkIfGameIsOver(): boolean {
     const maxDots = 4 + 4 + 1 + 1;
@@ -121,7 +137,7 @@ export class AppComponent {
     for (let i = 0; i < this.maxGrid; i++) {
       for (let j = 0; j < this.maxGrid; j++) {
         const item = this.matrix[i][j];
-        if (item.status && item.shipId !== null) {
+        if (item.damaged && item.shipId !== null) {
           countDamaged++;
           if (countDamaged === maxDots) {
             return true;
@@ -141,7 +157,7 @@ export class AppComponent {
       for (let j = 0; j < y; j++) {
         matrix[i][j] = {
           shipId: null,
-          status: false,
+          damaged: false,
         } as GridItem;
       }
     }
@@ -292,25 +308,14 @@ export class AppComponent {
   }
 
   private generateShipShapeDot(ship: Ship): Ship {
-    let count = 0;
-    do {
-      ship.coords = [];
-      ship.coords.push({
-        x: this.random(this.maxGrid - 1),
-        y: this.random(this.maxGrid - 1),
-      } as Coord);
-      count++;
-      if (this.validateShip(ship)) {
-        break;
-      }
-    } while (count < 100);
-    console.log(count);
-
-    // // подвисаем тут - RangeError: Maximum call stack size exceeded
-    // if (!this.validateShip(ship)) {
-    //   return this.generateShipShapeDot(ship);
-    // }
-    // быстренько закостылил сверху кодом на время
+    ship.coords = [];
+    ship.coords.push({
+      x: this.random(this.maxGrid - 1),
+      y: this.random(this.maxGrid - 1),
+    } as Coord);
+    if (!this.validateShip(ship)) {
+      return this.generateShipShapeDot(ship);
+    }
 
     this.placeShip(ship);
     return ship;
@@ -327,10 +332,10 @@ export class AppComponent {
       }
 
       // проверить на нахождение в непосредственной близости с другими уже созданными кораблями
-      for (const curShip of this.ships) {
-        if (curShip.id !== ship.id) {
-          for (const otherCoord of curShip.coords) {
-            if (Math.abs(otherCoord.x - dot.x) < 2 || Math.abs(otherCoord.y - dot.y) < 2) {
+      for (const otherShip of this.ships) {
+        if (otherShip.id !== ship.id) {
+          for (const otherCoord of otherShip.coords) {
+            if (Math.abs(otherCoord.x - dot.x) < 2 && Math.abs(otherCoord.y - dot.y) < 2) {
               return false;
             }
           }

@@ -1,57 +1,153 @@
 $gridWidth: 400px;
-.grid {
-  width: $gridWidth;
-  height: $gridWidth;
-  &__td {
-    width: $gridWidth / 10;
-    height: $gridWidth / 10;
-    background-color: #c1e0ff;
+
+.game {
+  max-width: $gridWidth;
+  margin: 40px auto;
+  &-header {
+    h1 {
+      font-family: fantasy;
+      font-size: 50px;
+      margin: 0;
+      padding: 20px 0 0 0;
+      color: #fff;
+    }
+    p {
+      padding: 5px 0 0 0;
+      margin: 0;
+      color: #fff;
+      font-size: 18px;
+    }
   }
-  &__tr {
+  &-grid {
     width: $gridWidth;
-    height: $gridWidth / 10;
-    display: flex;
-  }
-  .ship {
-    background: darkgrey;
-  }
-  .shooted {
-    position: relative;
-    &:before {
-      content: '';
-      display: block;
-      width: 10px;
-      height: 10px;
-      border-radius: 5px;
-      background-color: #333;
-      top: 15px;
-      left: 15px;
-      position: absolute;
+    height: $gridWidth;
+    margin: 20px auto 0 auto;
+    &__td {
+      flex-basis: $gridWidth / 10;
+      height: $gridWidth / 10;
+      background-color: #c1e0ff;
     }
-    &:after {
-      content: '';
-      display: block;
-      background-color: #333;
-      position: absolute;
-      animation: bang 0.5s 1 ease-out;
+    &__tr {
+      width: $gridWidth;
+      height: $gridWidth / 10;
+      display: flex;
     }
-    @keyframes bang {
-      from {
-        width: 2px;
-        height: 2px;
-        top: 19px;
-        left: 19px;
-        border-radius: 1px;
-        opacity: 1;
-      }
-      to {
-        width: 80px;
-        height: 80px;
-        top: -20px;
-        left: -20px;
-        border-radius: 40px;
-        opacity: 0;
+    .ship {
+      background: darkgrey;
+      &.damaged {
+        background: #af5151;
+        transition: ease all 0.3s;
       }
     }
+    .shooted {
+      position: relative;
+      &:before {
+        content: '';
+        display: block;
+        width: 10px;
+        height: 10px;
+        border-radius: 5px;
+        background-color: #333;
+        top: 15px;
+        left: 15px;
+        position: absolute;
+        animation: bangDot 0.5s 1 ease-out;
+      }
+      @keyframes bangDot {
+        0% {
+          opacity: 0;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+      &:after {
+        content: '';
+        display: block;
+        position: absolute;
+        animation: bang 0.5s 1 ease-out;
+        z-index: 2;
+      }
+      @keyframes bang {
+        0% {
+          width: 2px;
+          height: 2px;
+          top: 19px;
+          left: 19px;
+          border-radius: 1px;
+          opacity: 1;
+          background-color: white;
+        }
+        50% {
+          width: 39px;
+          height: 39px;
+          top: -.5px;
+          left: -.5px;
+          border-radius: 19.5px;
+          opacity: .5;
+          background-color: yellow;
+        }
+        100% {
+          width: 80px;
+          height: 80px;
+          top: -20px;
+          left: -20px;
+          border-radius: 40px;
+          opacity: 0;
+          background-color: red;
+        }
+      }
+    }
+  }
+}
+.gameover {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: space-around;
+  align-self: center;
+  height: 100%;
+  animation: bloodCreate 3s 1 ease-out;
+  background: rgba(255, 0, 0, 1);
+
+  &-content {
+    margin: auto;
+    text-align: center;
+    h1 {
+      color: #000;
+      font-family: fantasy;
+      font-size: 80px;
+      margin: 0;
+      animation: fadeIn 3s 1 ease-out;
+    }
+    p {
+      color: #000;
+      font-size: 30px;
+      font-weight: bold;
+      margin: 0;
+      animation: fadeIn 3s 1 ease-out;
+    }
+  }
+}
+
+@keyframes bloodCreate {
+  0% {
+    background: rgba(255, 0, 0, 0);
+  }
+  100% {
+    background: rgba(255, 0, 0, 1);
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
   }
 }

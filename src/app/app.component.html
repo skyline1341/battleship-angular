@@ -1,18 +1,22 @@
 <div class="game">
-  <h1>Ship Battle</h1>
-  <p>Press space to make "boom"</p>
-  <div class="grid">
-    <div *ngFor="let tr of matrix" class="grid__tr">
+  <div class="game-header">
+    <h1>Ship Battle</h1>
+    <p>Press space to make "boom"</p>
+  </div>
+  <div class="game-grid">
+    <div *ngFor="let tr of matrix" class="game-grid__tr">
       <div
         *ngFor="let td of tr"
-        class="grid__td"
-        [ngClass]="{ship: td.shipId !== null, shooted: td.status}"
         title="{{ td.shipId }}"
+        class="game-grid__td {{ td.shipId !== null ? 'ship'+td.shipId : ''}}"
+        [ngClass]="{ship: td.shipId !== null, shooted: td.damaged}"
       ></div>
     </div>
   </div>
 </div>
 <div *ngIf="gameIsOver" class="gameover">
-  <h1>GAME OVER</h1>
-  <p>Press F5 to restart</p>
+  <div class="gameover-content">
+    <h1>GAME OVER</h1>
+    <p>Press F5 to restart</p>
+  </div>
 </div>
