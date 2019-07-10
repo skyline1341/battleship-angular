@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component} from '@angular/core';
+import {ChangeDetectorRef, Component, HostListener} from '@angular/core';
 
 export interface GridItem {
   shipId: number | null;
@@ -15,6 +15,7 @@ export interface Ship {
   coords: Coord[]; // массив клеток, занимаемых кораблем
   type: string;
   dots: number;
+  alive: true;
 }
 
 export enum ShipTypes {
@@ -34,6 +35,7 @@ export class AppComponent {
   readonly maxGrid = 10;
   title = 'battleship';
   matrix: GridItem[][];
+  gameIsOver = false;
 
   ships: Ship[] = [
     {
@@ -41,26 +43,40 @@ export class AppComponent {
       coords: [],
       type: ShipTypes.L_SHAPED,
       dots: 4,
+      alive: true,
     },
     {
       id: 2,
       coords: [],
       type: ShipTypes.I_SHAPED,
       dots: 4,
+      alive: true,
     },
     {
       id: 3,
       coords: [],
       type: ShipTypes.DOT_SHAPED,
       dots: 1,
+      alive: true,
     },
     {
       id: 4,
       coords: [],
       type: ShipTypes.DOT_SHAPED,
       dots: 1,
+      alive: true,
     },
   ];
+
+  @HostListener('window:keydown', ['$event'])
+  spaceEvent(event: KeyboardEvent) {
+    if (event.code === 'Space') {
+      if (!this.gameIsOver) {
+        this.shootRandom();
+        this.gameIsOver = this.checkIfGameIsOver();
+      }
+    }
+  }
 
   constructor(
     private cdr: ChangeDetectorRef,
@@ -72,6 +88,48 @@ export class AppComponent {
     this.matrix = this.createEmptyMatrix();
     this.generateShips(this.ships);
     console.log(this.ships);
+  }
+
+  private shootRandom(): void {
+    let x = 0;
+    let y = 0;
+    do {
+      x = this.random(this.maxGrid - 1);
+      y = this.random(this.maxGrid - 1);
+    } while (this.matrix[x][y].status);
+    this.matrix[x][y].status = true;
+  }
+
+  // private checkShipsKilled(): void {
+  //   const shootedDots: Coord[] = [];
+  //   for (let i = 0; i < this.maxGrid; i++) {
+  //     for (let j = 0; j < this.maxGrid; j++) {
+  //       if (this.matrix[i][j].status) {
+  //         shootedDots.push({
+  //           x: i,
+  //           y: j,
+  //         } as Coord);
+  //       }
+  //     }
+  //   }
+  //   console.log(shootedDots);
+  // }
+
+  private checkIfGameIsOver(): boolean {
+    const maxDots = 4 + 4 + 1 + 1;
+    let countDamaged = 0;
+    for (let i = 0; i < this.maxGrid; i++) {
+      for (let j = 0; j < this.maxGrid; j++) {
+        const item = this.matrix[i][j];
+        if (item.status && item.shipId !== null) {
+          countDamaged++;
+          if (countDamaged === maxDots) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   private createEmptyMatrix(): GridItem[][] {
@@ -194,7 +252,6 @@ export class AppComponent {
       }
     }
 
-    // ЗАЦИКЛИВАЕМСЯ ТУТ - RangeError: Maximum call stack size exceeded
     if (!this.validateShip(ship)) {
       return this.generateShipShapeL(ship);
     }
@@ -226,7 +283,6 @@ export class AppComponent {
       }
     }
 
-    // ЗАЦИКЛИВАЕМСЯ ТУТ - RangeError: Maximum call stack size exceeded
     if (!this.validateShip(ship)) {
       return this.generateShipShapeI(ship);
     }
@@ -236,16 +292,25 @@ export class AppComponent {
   }
 
   private generateShipShapeDot(ship: Ship): Ship {
-    ship.coords = [];
-    ship.coords.push({
-      x: this.random(this.maxGrid - 1),
-      y: this.random(this.maxGrid - 1),
-    } as Coord);
+    let count = 0;
+    do {
+      ship.coords = [];
+      ship.coords.push({
+        x: this.random(this.maxGrid - 1),
+        y: this.random(this.maxGrid - 1),
+      } as Coord);
+      count++;
+      if (this.validateShip(ship)) {
+        break;
+      }
+    } while (count < 100);
+    console.log(count);
 
-    // ЗАЦИКЛИВАЕМСЯ ТУТ - RangeError: Maximum call stack size exceeded
-    if (!this.validateShip(ship)) {
-      return this.generateShipShapeDot(ship);
-    }
+    // // подвисаем тут - RangeError: Maximum call stack size exceeded
+    // if (!this.validateShip(ship)) {
+    //   return this.generateShipShapeDot(ship);
+    // }
+    // быстренько закостылил сверху кодом на время
 
     this.placeShip(ship);
     return ship;
